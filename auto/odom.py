@@ -16,6 +16,8 @@ class Odometri():
         self.y = 0
         self.theta = 0
 
+        self.frequency = 0
+
         self.prev_dist_x_right = 0
         self.prev_dist_x_left = 0
         self.prev_dist_y = 0
