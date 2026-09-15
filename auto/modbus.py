@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import UInt16MultiArray
 from pymodbus.client import ModbusSerialClient
 import struct
   
@@ -10,7 +10,7 @@ class Modbus(Node):
 
         self.client_ = client
         self.frequency = 1.0
-        self.pub_ = self.create_publisher(Float32MultiArray, "modbus_com", 10)
+        self.pub_ = self.create_publisher(UInt16MultiArray, "process_encoder", 10)
 
         self.timer = self.create_timer(self.frequency, self.timerCallback)
 
@@ -27,7 +27,7 @@ class Modbus(Node):
         distance_x_left = self.convertToFloat(result_x_left.registers[0], result_x_left.registers[1])
         distance_y = self.convertToFloat(result_y.registers[0], result_y.registers[1])
 
-        msg = Float32MultiArray()
+        msg = UInt16MultiArray()
         msg.data = [distance_x_right, distance_x_left, distance_y]
         self.pub_.publish(msg)
 

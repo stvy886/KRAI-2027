@@ -25,7 +25,9 @@ setup(
     entry_points={
         'console_scripts': [
             "modbus=auto.modbus:main",
-            "nav=auto.odom:main"
+            "nav=auto.odom:main",
+            "motor=auto.motor:main",
+            "deadwheel=auto.deadwheel:main"
         ],
     },
 )
