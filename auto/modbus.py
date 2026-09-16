@@ -16,11 +16,11 @@ class Modbus(Node):
 
     def timerCallback(self):
         result_x_right = self.client_.read_input_registers(address=0, count=1, slave=1)
-        result_x_left = self.client_read_input_registers(address=0, count=1, slave=2)
-        result_y = self.client_.read_input_registers(addrees=0, count=1, slave=3)
+        result_x_left = self.client_.read_input_registers(address=0, count=1, slave=2)
+        result_y = self.client_.read_input_registers(address=0, count=1, slave=3)
 
         msg = UInt16MultiArray()
-        msg.data = [result_x_right, result_x_left, result_y]
+        msg.data = [result_x_right[0], result_x_left[0], result_y[0]]
         self.pub_.publish(msg)
 
 def main():
