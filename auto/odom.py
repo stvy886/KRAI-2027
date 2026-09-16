@@ -149,7 +149,7 @@ class Navigation(Node):
         self.timer_ = self.create_timer(1.0, self.timerCallback)
 
     def navigation(self, msg):
-        self.robot.inputEncValue(msg[0], msg[1], msg[2])
+        self.robot.inputEncValue(msg.data[0], msg.data[1], msg.data[2])
         self.robot.pose()
 
     def timerCallback(self):
