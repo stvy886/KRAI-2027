@@ -122,11 +122,15 @@ class Odometri():
 
         return FL, FR, BL, BR
 
-    def targetToRpm(self, targetX, targetY, targetTheta):
+    def targetToRadPerSec(self, targetX, targetY, targetTheta):
         vx, vy, omega = self.PID(targetX, targetY, targetTheta)
         FL, FR, BL, BR = self.inverseKinematic(vx, vy, omega)
 
         return FL, FR, BL, BR
+
+    def radPerSecToRPM(self, rad_per_sec):
+        rpm = (rad_per_sec*60) / (2*math.pi)
+        return rpm
     
     def rpmToPwm(self, rpm, rpm_max, pwm_max):
         pwm = (rpm/rpm_max)*pwm_max
