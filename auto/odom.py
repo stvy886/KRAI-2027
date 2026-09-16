@@ -6,7 +6,7 @@ import numpy as np
 
 class Odometri():
     def __init__(self, trck_width, forward_off, mecanum_rad, mecanum_lx, mecanum_ly, 
-                 kp_lin, ki_lin, kd_lin, kp_ang, ki_ang, kd_ang):
+                 kp_lin, ki_lin, kd_lin, kp_ang, ki_ang, kd_ang, dt):
 
         # variable for inverse kinematic
         self.radius = mecanum_rad
@@ -45,6 +45,8 @@ class Odometri():
         self.prev_err_ang = 0
         self.integral_ang = 0
 
+        self.dt = dt
+
     def inputEncValue(self, R, L, S):
         self.now_dist_x_right = R
         self.now_dist_x_left = L
@@ -82,7 +84,7 @@ class Odometri():
         self.globalFrame(d_forward, d_heading, d_strafe)
         self.updateVar()
 
-    def PID(self, targetX, targetY, targetTheta, dt = 1):
+    def PID(self, targetX, targetY, targetTheta):
         errorX = targetX - self.x
         errorY = targetY - self.y
         errorDist = math.hypot(errorX, errorY)
@@ -90,17 +92,17 @@ class Odometri():
         errorTheta = math.atan2(math.sin(targetTheta - self.theta), 
                                 math.cos(targetTheta - self.theta))
 
-        self.integral_lin += errorDist * dt
-        self.integral_ang += errorTheta * dt
+        self.integral_lin += errorDist * self.dt
+        self.integral_ang += errorTheta * self.dt
 
-        d_lin = (errorDist - self.prev_err_lin) / dt if dt > 0 else 0.0
-        d_ang = (errorTheta - self.prev_err_ang) / dt if dt > 0 else 0.0
+        d_lin = (errorDist - self.prev_err_lin) / self.dt if dt > 0 else 0.0
+        d_ang = (errorTheta - self.prev_err_ang) / self.dt if dt > 0 else 0.0
         self.prev_err_lin, self.prev_err_ang = errorDist, errorTheta
 
         v = (self.kp_lin * errorDist + self.ki_lin * self.integral_lin + self.kd_lin * d_lin)
         omega = (self.kp_ang * errorTheta + self.ki_ang * self.integral_ang + self.kd_ang * d_ang)
 
-        v = np.clip(v, -0,6, 0,6)
+        v = np.clip(v, -0.6, 0.6)
         omega = np.clip(omega, -0.2, 0.2)
 
         heading_to_target = math.atan2(errorY, errorX)
@@ -135,11 +137,11 @@ class Odometri():
 class Navigation(Node):
     def __init__(self, track_width, forward_offset, radius, lx, ly, 
                  kp_lin = 2.0, ki_lin = 0, kd_lin = 1.0, 
-                 kp_ang = 2.0, ki_ang = 0, kd_ang = 1.0):
+                 kp_ang = 2.0, ki_ang = 0, kd_ang = 1.0, dt = 1):
         super().__init__("odom_subs")
 
         self.robot = Odometri(track_width, forward_offset, radius, lx, ly, 
-                              kp_lin, ki_lin, kd_lin, kp_ang, ki_ang, kd_ang)
+                              kp_lin, ki_lin, kd_lin, kp_ang, ki_ang, kd_ang, dt)
         self.subs_ = self.create_subscription(Float32MultiArray, 
                                              "enc_val", 
                                              self.navigation, 
