@@ -95,8 +95,8 @@ class Odometri():
         self.integral_lin += errorDist * self.dt
         self.integral_ang += errorTheta * self.dt
 
-        d_lin = (errorDist - self.prev_err_lin) / self.dt if dt > 0 else 0.0
-        d_ang = (errorTheta - self.prev_err_ang) / self.dt if dt > 0 else 0.0
+        d_lin = (errorDist - self.prev_err_lin) / self.dt if self.dt > 0 else 0.0
+        d_ang = (errorTheta - self.prev_err_ang) / self.dt if self.dt > 0 else 0.0
         self.prev_err_lin, self.prev_err_ang = errorDist, errorTheta
 
         v = (self.kp_lin * errorDist + self.ki_lin * self.integral_lin + self.kd_lin * d_lin)
