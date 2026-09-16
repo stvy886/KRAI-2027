@@ -9,16 +9,16 @@ class Modbus(Node):
         super().__init__("modbus")
 
         self.client_ = client
+        self.data = 1
         self.frequency = 1.0
         self.pub_ = self.create_publisher(Int16, "test", 10)
 
         self.timer = self.create_timer(self.frequency, self.timerCallback)
+        self.client_.write_registers(address=0, value= self.data, slave=1)
 
     def timerCallback(self):
-        data_motor = self.client_.write_registers(address=0, value=1, slave=1)
-
         msg = Int16()
-        msg.data = data_motor
+        msg.data = self.data
         self.pub_.publish(msg)
 
 
