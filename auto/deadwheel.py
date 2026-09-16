@@ -12,6 +12,7 @@ class Encoder():
         self.rotate = 0
         self.init_con = True
         self.init_con2 = True
+        self.init_ang = 0
         self.total_ang = 0
         self.diameter = 4.8
 
@@ -25,11 +26,11 @@ class Encoder():
             self.ang = self.ang + 360
 
     def rotation(self):
-        if ((self.ang >= 0) & (self.ang <= 90)):
+        if ((self.ang >= 0) and (self.ang <= 90)):
             self.kuadran = 1
-        elif ((self.ang > 90) & (self.ang <= 180)):
+        elif ((self.ang > 90) and (self.ang <= 180)):
             self.kuadran = 2
-        elif ((self.ang > 180) & (self.ang <= 270)):
+        elif ((self.ang > 180) and (self.ang <= 270)):
             self.kuadran = 3
         else:
             self.kuadran = 4
@@ -38,9 +39,9 @@ class Encoder():
             self.last_kuadran = self.kuadran
             self.init_con = False
 
-        if ((self.kuadran == 1) & (self.last_kuadran == 4)):
+        if ((self.kuadran == 1) and (self.last_kuadran == 4)):
             self.rotate += 1
-        elif ((self.kuadran == 4) & (self.last_kuadran == 1)):
+        elif ((self.kuadran == 4) and (self.last_kuadran == 1)):
             self.rotate -= 1
 
         self.last_kuadran = self.kuadran
@@ -55,11 +56,11 @@ class Encoder():
     
     def processedEnc(self, msg):
         if (self.init_con2):
-            init_ang = self.countAng(msg)
+            self.init_ang = self.countAng(msg)
             self.init_con2 = False
 
         self.ang = self.countAng(msg)
-        self.correctAng(init_ang)
+        self.correctAng(self.init_ang)
         self.rotation()
         self.total_ang = self.countTotalAng()
         distance = self.countDistance()
@@ -68,11 +69,11 @@ class Encoder():
 
 class DeadWheel(Node):
     def __init__(self):
-        super.__init__("deadwheel")
+        super().__init__("deadwheel")
 
         self.frequency = 1.0
         self.sub_ = self.create_subscription(UInt16MultiArray, "process_encoder", self.encode, 10)
-        self.pub_ = self.create_publisher(Float32MultiArray, "enc_val", 10)
+        self.pub_ = self.create_publisher(Float32MultiArray, "odometry", 10)
         self.timer = self.create_timer(self.frequency, self.publishVal)
 
         self.xR = 0
