@@ -8,31 +8,37 @@ class Odometri():
     def __init__(self, trck_width, forward_off, mecanum_rad, mecanum_lx, mecanum_ly, 
                  kp_lin, ki_lin, kd_lin, kp_ang, ki_ang, kd_ang):
 
+        # variable for inverse kinematic
         self.radius = mecanum_rad
         self.lx = mecanum_lx
         self.ly = mecanum_ly
 
+        # global pose
         self.x = 0
         self.y = 0
         self.theta = 0
 
+        # variable for local pose
         self.prev_dist_x_right = 0
         self.prev_dist_x_left = 0
         self.prev_dist_y = 0
         
         self.trackwidth = trck_width
         self.forwardoffset = forward_off
-        
+
+        # distance input from encoder
         self.now_dist_x_right = 0
         self.now_dist_x_left = 0
         self.now_dist_y = 0
 
+        # PID variable for linear velocity
         self.kp_lin = kp_lin
         self.ki_lin = ki_lin
         self.kd_lin = kd_lin
         self.prev_err_lin = 0
         self.integral_lin = 0
 
+        # PID variable for angular velocity
         self.kp_ang = kp_ang
         self.ki_ang = ki_ang
         self.kd_ang = kd_ang
