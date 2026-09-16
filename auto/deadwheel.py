@@ -85,9 +85,9 @@ class DeadWheel(Node):
         self.encY = Encoder()
 
     def encode(self, msg):
-        self.xR = self.encXR.processedEnc(msg[0])
-        self.xL = self.encXL.processedEnc(msg[1])
-        self.y = self.encY.processedEnc(msg[2])
+        self.xR = self.encXR.processedEnc(msg.data[0])
+        self.xL = self.encXL.processedEnc(msg.data[1])
+        self.y = self.encY.processedEnc(msg.data[2])
 
     def publishVal(self):
         msg = Float32MultiArray()
