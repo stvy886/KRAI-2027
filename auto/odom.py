@@ -147,7 +147,7 @@ class Navigation(Node):
         self.robot = Odometri(track_width, forward_offset, radius, lx, ly, 
                               kp_lin, ki_lin, kd_lin, kp_ang, ki_ang, kd_ang, dt)
         self.subs_ = self.create_subscription(Float32MultiArray, 
-                                             "enc_val", 
+                                             "odometry", 
                                              self.navigation, 
                                              10)
 
