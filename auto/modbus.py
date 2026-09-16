@@ -2,7 +2,6 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import UInt16MultiArray
 from pymodbus.client import ModbusSerialClient
-import struct
   
 class Modbus(Node):
     def __init__(self, client):
