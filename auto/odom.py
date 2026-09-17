@@ -150,7 +150,6 @@ class Navigation(Node):
                                              "odometry", 
                                              self.navigation, 
                                              10)
-
         self.pub_ = self.create_publisher(Float32MultiArray, "pose", 10)
         self.timer_ = self.create_timer(1.0, self.timerCallback)
 

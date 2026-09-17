@@ -2,21 +2,28 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Int16
 from pymodbus.client import ModbusSerialClient
-import struct
+import time
   
 class Modbus(Node):
     def __init__(self, client):
         super().__init__("modbus")
 
+        self.start_time = time.monotonic()
         self.client_ = client
         self.data = 1
-        self.frequency = 1.0
+        self.frequency = 0.01 
         self.pub_ = self.create_publisher(Int16, "test", 10)
-
         self.timer = self.create_timer(self.frequency, self.timerCallback)
-        self.client_.write_registers(address=0, value= self.data, slave=1)
 
     def timerCallback(self):
+
+        elapsed = time.monotonic() - self.start_time
+        if elapsed < 2.0:
+            self.data = 1
+        else:
+            self.data = 0
+
+        self.client_.write_register(address=0, value= self.data, slave=1)
         msg = Int16()
         msg.data = self.data
         self.pub_.publish(msg)

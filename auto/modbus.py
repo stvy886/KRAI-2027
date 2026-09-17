@@ -10,7 +10,6 @@ class Modbus(Node):
         self.client_ = client
         self.frequency = 1.0
         self.pub_ = self.create_publisher(UInt16MultiArray, "process_encoder", 10)
-
         self.timer = self.create_timer(self.frequency, self.timerCallback)
 
     def timerCallback(self):
@@ -19,7 +18,7 @@ class Modbus(Node):
         result_y = self.client_.read_input_registers(address=0, count=1, slave=3)
 
         msg = UInt16MultiArray()
-        msg.data = [result_x_right[0], result_x_left[0], result_y[0]]
+        msg.data = [result_x_right.registers[0], result_x_left.registers[0], result_y.registers[0]]
         self.pub_.publish(msg)
 
 def main():
