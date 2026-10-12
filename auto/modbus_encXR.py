@@ -8,9 +8,9 @@ class Modbus(Node):
         super().__init__("modbusXR")
 
         self.client_ = client
-        self.frequency = 0.01
+        self.period = 0.01
         self.pub_ = self.create_publisher(UInt16, "process_encoderXR", 10)
-        self.timer = self.create_timer(self.frequency, self.timerCallback)
+        self.timer = self.create_timer(self.period, self.timerCallback)
 
     def timerCallback(self):
         result_x_right = self.client_.read_input_registers(address=0, count=1, slave=1)

@@ -71,16 +71,16 @@ class DeadWheel(Node):
     def __init__(self):
         super().__init__("deadwheel")
 
-        self.frequency = 0.01
+        self.period = 0.01
         self.subXR_ = self.create_subscription(UInt16, "process_encoderXR", self.encodeXR, 10)
         self.subXL_ = self.create_subscription(UInt16, "process_encoderXL", self.encodeXL, 10)
         self.subY_ = self.create_subscription(UInt16, "process_encoderY", self.encodeY, 10)
         self.pub_ = self.create_publisher(Float32MultiArray, "odometry", 10)
-        self.timer = self.create_timer(self.frequency, self.publishVal)
+        self.timer = self.create_timer(self.period, self.publishVal)
 
-        self.xR = 0
-        self.xL = 0
-        self.y = 0
+        self.xR = 0.0
+        self.xL = 0.0
+        self.y = 0.0
 
         self.encXR = Encoder()
         self.encXL = Encoder()
