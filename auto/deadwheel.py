@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import UInt16MultiArray, Float32MultiArray
+from std_msgs.msg import UInt16, Float32MultiArray
 import math
 
 class Encoder():
@@ -14,7 +14,7 @@ class Encoder():
         self.init_con2 = True
         self.init_ang = 0
         self.total_ang = 0
-        self.diameter = 4.8
+        self.diameter = 4.6
 
     def countAng(self, data):
         angle = data * 360.0/4096.0
@@ -71,8 +71,10 @@ class DeadWheel(Node):
     def __init__(self):
         super().__init__("deadwheel")
 
-        self.frequency = 1.0
-        self.sub_ = self.create_subscription(UInt16MultiArray, "process_encoder", self.encode, 10)
+        self.frequency = 0.01
+        self.subXR_ = self.create_subscription(UInt16, "process_encoderXR", self.encodeXR, 10)
+        self.subXL_ = self.create_subscription(UInt16, "process_encoderXL", self.encodeXL, 10)
+        self.subY_ = self.create_subscription(UInt16, "process_encoderY", self.encodeY, 10)
         self.pub_ = self.create_publisher(Float32MultiArray, "odometry", 10)
         self.timer = self.create_timer(self.frequency, self.publishVal)
 
@@ -84,10 +86,14 @@ class DeadWheel(Node):
         self.encXL = Encoder()
         self.encY = Encoder()
 
-    def encode(self, msg):
-        self.xR = self.encXR.processedEnc(msg.data[0])
-        self.xL = self.encXL.processedEnc(msg.data[1])
-        self.y = self.encY.processedEnc(msg.data[2])
+    def encodeXR(self, msg):
+        self.xR = self.encXR.processedEnc(msg.data)
+
+    def encodeXL(self, msg):
+        self.xL = self.encXL.processedEnc(msg.data)
+
+    def encodeY(self, msg):
+        self.y = self.encY.processedEnc(msg.data)
 
     def publishVal(self):
         msg = Float32MultiArray()

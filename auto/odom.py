@@ -1,12 +1,17 @@
 import rclpy
 from rclpy.node import Node 
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32, Float32MultiArray
 import math
 import numpy as np
 
-class Odometri():
+class Odometri(Node):
     def __init__(self, trck_width, forward_off, mecanum_rad, mecanum_lx, mecanum_ly, 
                  kp_lin, ki_lin, kd_lin, kp_ang, ki_ang, kd_ang, dt):
+
+        super().__init__('odometry')
+
+        self.init_state = 0
+        self.first_con = True
 
         # variable for inverse kinematic
         self.radius = mecanum_rad
@@ -14,43 +19,56 @@ class Odometri():
         self.ly = mecanum_ly
 
         # global pose
-        self.x = 0
-        self.y = 0
-        self.theta = 0
+        self.x = 0.0
+        self.y = 0.0
+        self.theta = 0.0
 
         # variable for local pose
-        self.prev_dist_x_right = 0
-        self.prev_dist_x_left = 0
-        self.prev_dist_y = 0
+        self.prev_dist_x_right = 0.0
+        self.prev_dist_x_left = 0.0
+        self.prev_dist_y = 0.0
         
         self.trackwidth = trck_width
         self.forwardoffset = forward_off
 
         # distance input from encoder
-        self.now_dist_x_right = 0
-        self.now_dist_x_left = 0
-        self.now_dist_y = 0
+        self.now_dist_x_right = 0.0
+        self.now_dist_x_left = 0.0
+        self.now_dist_y = 0.0
 
         # PID variable for linear velocity
         self.kp_lin = kp_lin
         self.ki_lin = ki_lin
         self.kd_lin = kd_lin
-        self.prev_err_lin = 0
-        self.integral_lin = 0
+        self.prev_err_lin = 0.0
+        self.integral_lin = 0.0
 
         # PID variable for angular velocity
         self.kp_ang = kp_ang
         self.ki_ang = ki_ang
         self.kd_ang = kd_ang
-        self.prev_err_ang = 0
-        self.integral_ang = 0
+        self.prev_err_ang = 0.0
+        self.integral_ang = 0.0
 
         self.dt = dt
+
+        # Publisher
+        self.pubPose_ = self.create_publisher(Float32MultiArray, "pose", 10)
+        self.pubFR_ = self.create_publisher(Float32, "motorFR", 10)
+        self.pubFL_ = self.create_publisher(Float32, "motorFL", 10)
+        self.pubBR_ = self.create_publisher(Float32, "motorBR", 10)
+        self.pubBL_ = self.create_publisher(Float32, "motorBL", 10)
 
     def inputEncValue(self, R, L, S):
         self.now_dist_x_right = R
         self.now_dist_x_left = L
         self.now_dist_y = S
+
+        if self.first_con:
+            self.prev_dist_x_right = R
+            self.prev_dist_x_left = L
+            self.prev_dist_y = S
+            self.first_con = False
 
     def localFrame(self):
         dx_R = self.now_dist_x_right - self.prev_dist_x_right
@@ -102,7 +120,7 @@ class Odometri():
         v = (self.kp_lin * errorDist + self.ki_lin * self.integral_lin + self.kd_lin * d_lin)
         omega = (self.kp_ang * errorTheta + self.ki_ang * self.integral_ang + self.kd_ang * d_ang)
 
-        v = np.clip(v, -0.6, 0.6)
+        v = np.clip(v, -20, 20)
         omega = np.clip(omega, -0.2, 0.2)
 
         heading_to_target = math.atan2(errorY, errorX)
@@ -110,6 +128,9 @@ class Odometri():
 
         vx = v * math.cos(body_angle)
         vy = v * math.sin(body_angle)
+
+        if (abs(errorDist) < 2) and (abs(errorTheta) < 0.05):
+            vx, vy, omega = 0.0, 0.0, 0.0
 
         return vx, vy, omega
         
@@ -138,10 +159,50 @@ class Odometri():
 
         return pwm
 
+    def moveToTarget(self, R, L, S, coordinats, pwm_max = 255, rpm_max = 500):
+        self.inputEncValue(R, L, S)
+        self.pose()
+
+        targetX, targetY, targetTheta = coordinats[self.init_state]
+        errorX = targetX - self.x
+        errorY = targetY - self.y
+        errorDist = math.hypot(errorX, errorY)
+        errorTheta = math.atan2(math.sin(targetTheta - self.theta),
+                                    math.cos(targetTheta - self.theta))
+            
+        FL, FR, BL, BR = self.targetToRadPerSec(targetX, targetY, targetTheta)
+        RPM_FL = self.radPerSecToRPM(FL)
+        RPM_FR = self.radPerSecToRPM(FR)
+        RPM_BL = self.radPerSecToRPM(BL)
+        RPM_BR = self.radPerSecToRPM(BR)
+
+        PWM_FL = self.rpmToPwm(RPM_FL, rpm_max, pwm_max)
+        PWM_FR = self.rpmToPwm(RPM_FR, rpm_max, pwm_max)
+        PWM_BL = self.rpmToPwm(RPM_BL, rpm_max, pwm_max)
+        PWM_BR = self.rpmToPwm(RPM_BR, rpm_max, pwm_max)
+
+        self.pubPose_.publish(Float32MultiArray(data=[self.x, self.y, (self.theta/(2*math.pi))*360]))
+        self.pubFR_.publish(Float32(data=PWM_FR))
+        self.pubFL_.publish(Float32(data=PWM_FL))
+        self.pubBR_.publish(Float32(data=PWM_BR))
+        self.pubBL_.publish(Float32(data=PWM_BL))
+
+        if (errorDist < 2 and abs(errorTheta) < 0.05):
+            if self.init_state < (len(coordinats) - 1):
+                self.init_state += 1
+                self.x = 0.0
+                self.y = 0.0
+                self.theta = 0.0
+                self.integral_lin = 0.0
+                self.integral_ang = 0.0
+                self.prev_err_lin = 0.0
+                self.prev_err_ang = 0.0
+            
 class Navigation(Node):
     def __init__(self, track_width, forward_offset, radius, lx, ly, 
-                 kp_lin = 2.0, ki_lin = 0, kd_lin = 1.0, 
-                 kp_ang = 2.0, ki_ang = 0, kd_ang = 1.0, dt = 1):
+                 kp_lin = 2.0, ki_lin = 0.0, kd_lin = 1.0, 
+                 kp_ang = 2.0, ki_ang = 0.0, kd_ang = 1.0, dt = 0.01):
+        
         super().__init__("odom_subs")
 
         self.robot = Odometri(track_width, forward_offset, radius, lx, ly, 
@@ -150,21 +211,13 @@ class Navigation(Node):
                                              "odometry", 
                                              self.navigation, 
                                              10)
-        self.pub_ = self.create_publisher(Float32MultiArray, "pose", 10)
-        self.timer_ = self.create_timer(1.0, self.timerCallback)
 
     def navigation(self, msg):
-        self.robot.inputEncValue(msg.data[0], msg.data[1], msg.data[2])
-        self.robot.pose()
-
-    def timerCallback(self):
-        msg = Float32MultiArray()
-        msg.data = [self.robot.x, self.robot.y, self.robot.theta]
-        self.pub_.publish(msg)
+        self.robot.moveToTarget(R=msg.data[0], L=msg.data[1], S=msg.data[2], coordinats=[(0,0,0)])
 
 def main():
     rclpy.init()
-    node = Navigation(10, 5, 0.25, 5, 5)
+    node = Navigation(track_width=27.25, forward_offset=4.45, radius=13, lx=22, ly=24, dt=0.01)
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()

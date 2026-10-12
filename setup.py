@@ -1,3 +1,5 @@
+import os
+from glob import glob
 from setuptools import find_packages, setup
 
 package_name = 'auto'
@@ -10,6 +12,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        (os.path.join('share', package_name, 'launch'), glob('launch/*.py'))
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -24,10 +27,15 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            "modbus=auto.modbus:main",
-            "nav=auto.odom:main",
-            "motor=auto.motor:main",
-            "deadwheel=auto.deadwheel:main"
+            "modbusxr=auto.modbus_encXR:main",
+            "modbusxl=auto.modbus_encXL:main",
+            "modbusy=auto.modbus_encY:main",
+            "odom=auto.odom:main",
+            "deadwheel=auto.deadwheel:main",
+            "motorFR=auto.motorFR:main",
+            "motorFL=auto.motorFL:main",
+            "motorBR=auto.motorBR:main",
+            "motorBL=auto.motorBL:main"
         ],
     },
 )
