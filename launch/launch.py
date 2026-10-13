@@ -29,8 +29,6 @@ def generate_launch_description():
         executable="odom"
     )
 
-    
-
     ld.add_action(enc_xr_node)
     ld.add_action(enc_xl_node)
     ld.add_action(enc_y_node)
