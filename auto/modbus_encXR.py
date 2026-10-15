@@ -23,7 +23,7 @@ def main():
     rclpy.init()
     
     master = ModbusSerialClient(
-        port="/dev/ttyUSB2",
+        port="/dev/modbus_3",
         baudrate=115200,
         bytesize=8,
         parity='N',

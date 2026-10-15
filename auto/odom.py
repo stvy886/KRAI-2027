@@ -120,8 +120,8 @@ class Odometri(Node):
         v = (self.kp_lin * errorDist + self.ki_lin * self.integral_lin + self.kd_lin * d_lin)
         omega = (self.kp_ang * errorTheta + self.ki_ang * self.integral_ang + self.kd_ang * d_ang)
 
-        v = np.clip(v, -20, 20)
-        omega = np.clip(omega, -0.2, 0.2)
+        v = np.clip(v, -100, 100)
+        omega = np.clip(omega, -3, 3)
 
         heading_to_target = math.atan2(errorY, errorX)
         body_angle = heading_to_target - self.theta
@@ -129,7 +129,7 @@ class Odometri(Node):
         vx = v * math.cos(body_angle)
         vy = v * math.sin(body_angle)
 
-        if (abs(errorDist) < 2) and (abs(errorTheta) < 0.05):
+        if (abs(errorDist) < 3) and (abs(errorTheta) < 0.0349):
             vx, vy, omega = 0.0, 0.0, 0.0
 
         return vx, vy, omega
@@ -166,6 +166,7 @@ class Odometri(Node):
         targetX, targetY, targetTheta = coordinats[self.init_state]
         errorX = targetX - self.x
         errorY = targetY - self.y
+        targetTheta = math.radians(targetTheta)
         errorDist = math.hypot(errorX, errorY)
         errorTheta = math.atan2(math.sin(targetTheta - self.theta),
                                     math.cos(targetTheta - self.theta))
@@ -187,7 +188,7 @@ class Odometri(Node):
         self.pubBR_.publish(Float32(data=PWM_BR))
         self.pubBL_.publish(Float32(data=PWM_BL))
 
-        if (errorDist < 2 and abs(errorTheta) < 0.05):
+        if (errorDist < 3 and abs(errorTheta) < 0.0349):
             if self.init_state < (len(coordinats) - 1):
                 self.init_state += 1
                 self.x = 0.0
@@ -213,11 +214,11 @@ class Navigation(Node):
                                              10)
 
     def navigation(self, msg):
-        self.robot.moveToTarget(R=msg.data[0], L=msg.data[1], S=msg.data[2], coordinats=[(0,0,0)])
+        self.robot.moveToTarget(R=msg.data[0], L=msg.data[1], S=msg.data[2], coordinats=[(30,0,90)])
 
 def main():
     rclpy.init()
-    node = Navigation(track_width=27.25, forward_offset=4.45, radius=13, lx=22, ly=24, dt=0.01)
+    node = Navigation(kp_lin=5, kd_lin=0.1, ki_ang=0.001, kp_ang=1, kd_ang=0.1, track_width=27.25, forward_offset=4.45, radius=13, lx=22, ly=24, dt=0.01)
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
