@@ -12,7 +12,7 @@ class Modbus(Node):
 
     def pwmCallback(self, msg):
         pwm = int(msg.data)
-        self.client_.write_register(address=0, value=(pwm & 0xffff), slave=1)
+        self.client_.write_register(address=0, value=(pwm & 0xffff), device_id=1)
 
 def main():
     rclpy.init()
