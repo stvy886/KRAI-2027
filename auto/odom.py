@@ -107,8 +107,8 @@ class Odometri(Node):
         errorY = targetY - self.y
         errorDist = math.hypot(errorX, errorY)
 
-        errorTheta = math.atan2(math.sin(targetTheta - self.theta), 
-                                math.cos(targetTheta - self.theta))
+        errorTheta = math.atan2(math.sin(targetTheta + self.theta), 
+                                math.cos(targetTheta + self.theta))
 
         self.integral_lin += errorDist * self.dt
         self.integral_ang += errorTheta * self.dt
@@ -153,10 +153,17 @@ class Odometri(Node):
         rpm = (rad_per_sec*60) / (2*math.pi)
         return rpm
     
-    def rpmToPwm(self, rpm, rpm_max, pwm_max):
+    def rpmToPwm(self, rpm, rpm_max, pwm_max, pwm_min = 8):
         pwm = (rpm/rpm_max)*pwm_max
-        pwm = np.clip(pwm, -pwm_max, pwm_max)
 
+        if pwm > 1.0:
+            pwm = math.copysign(max(abs(pwm), pwm_min), pwm)
+        elif pwm < -1.0:
+            pwm = math.copysign(max(abs(pwm), pwm_min), pwm)
+        else:
+            pwm = 0.0
+
+        pwm = np.clip(pwm, -pwm_max, pwm_max)
         return pwm
 
     def moveToTarget(self, R, L, S, coordinats, pwm_max = 255, rpm_max = 500):
@@ -168,8 +175,8 @@ class Odometri(Node):
         errorY = targetY - self.y
         targetTheta = math.radians(targetTheta)
         errorDist = math.hypot(errorX, errorY)
-        errorTheta = math.atan2(math.sin(targetTheta - self.theta),
-                                    math.cos(targetTheta - self.theta))
+        errorTheta = math.atan2(math.sin(targetTheta + self.theta),
+                                    math.cos(targetTheta + self.theta))
             
         FL, FR, BL, BR = self.targetToRadPerSec(targetX, targetY, targetTheta)
         RPM_FL = self.radPerSecToRPM(FL)
@@ -214,7 +221,7 @@ class Navigation(Node):
                                              10)
 
     def navigation(self, msg):
-        self.robot.moveToTarget(R=msg.data[0], L=msg.data[1], S=msg.data[2], coordinats=[(30,0,90)])
+        self.robot.moveToTarget(R=msg.data[0], L=msg.data[1], S=msg.data[2], coordinats=[(50,0,0),(0,30,0),(-50,0,0),(0,-30,0)], pwm_max=255, rpm_max=500)
 
 def main():
     rclpy.init()
