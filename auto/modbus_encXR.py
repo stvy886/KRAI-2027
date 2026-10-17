@@ -13,7 +13,7 @@ class Modbus(Node):
         self.timer = self.create_timer(self.period, self.timerCallback)
 
     def timerCallback(self):
-        result_x_right = self.client_.read_input_registers(address=0, count=1, slave=1)
+        result_x_right = self.client_.read_input_registers(address=0, count=1, device_id=1)
 
         msg = UInt16()
         msg.data = result_x_right.registers[0]
