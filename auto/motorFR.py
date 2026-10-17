@@ -12,13 +12,13 @@ class Modbus(Node):
 
     def pwmCallback(self, msg):
         pwm = int(msg.data)
-        self.client_.write_register(address=0, value=(pwm & 0xffff), slave=1)
+        self.client_.write_register(address=0, value=(pwm & 0xffff), device_id=1)
 
 def main():
     rclpy.init()
     
     master = ModbusSerialClient(
-        port="/dev/modbus_6",
+        port="/dev/modbus_7",
         baudrate=115200,
         bytesize=8,
         parity='N',
