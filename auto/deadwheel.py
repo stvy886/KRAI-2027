@@ -97,7 +97,7 @@ class DeadWheel(Node):
 
     def publishVal(self):
         msg = Float32MultiArray()
-        msg.data = [self.xR, -1.00*(self.xL), self.y]
+        msg.data = [self.xR, -self.xL, self.y]
         self.pub_.publish(msg)
 
 def main():
